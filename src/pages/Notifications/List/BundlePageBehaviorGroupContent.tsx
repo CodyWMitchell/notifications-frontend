@@ -1,6 +1,6 @@
 import { Tab, TabTitleText } from '@patternfly/react-core';
 import { ExporterType } from '@redhat-cloud-services/insights-common-typescript';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import * as React from 'react';
 
 import { useAppContext } from '../../../app/AppContext';
@@ -35,8 +35,7 @@ export const BundlePageBehaviorGroupContent: React.FunctionComponent<
   React.PropsWithChildren<BundlePageBehaviorGroupContentProps>
 > = (props) => {
   const behaviorGroupContent = useBehaviorGroupContent(props.bundle.id);
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
+  const [queryParams, setQueryParams] = useSearchParams();
   const activeTab =
     queryParams.get('activeTab') === 'behaviorGroups'
       ? TabIndex.BehaviorGroups
@@ -127,11 +126,18 @@ export const BundlePageBehaviorGroupContent: React.FunctionComponent<
     [cancelEditMode]
   );
 
+  const handleTabSelect = (tabIndex: number | string) => {
+    const newTab =
+      tabIndex === TabIndex.BehaviorGroups ? 'behaviorGroups' : 'configuration';
+    setQueryParams({ activeTab: newTab });
+  };
+
   return (
     <TabComponent
       configuration={props.children}
       settings={props.children}
       activeKey={activeTab}
+      onSelect={handleTabSelect}
     >
       <Tab eventKey={0} title={<TabTitleText>Configuration</TabTitleText>}>
         <NotificationsToolbar

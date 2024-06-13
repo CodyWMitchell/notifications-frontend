@@ -6,11 +6,12 @@ interface MyTabComponentProps {
   configuration: React.ReactNode;
   settings: React.ReactNode;
   activeKey?: number;
+  onSelect?: (tabIndex: number | string) => void;
 }
 
 export const TabComponent: React.FunctionComponent<
   React.PropsWithChildren<MyTabComponentProps>
-> = ({ activeKey = 0, ...props }) => {
+> = ({ activeKey = 0, onSelect, ...props }) => {
   const [activeTabKey, setActiveTabKey] = React.useState(activeKey);
 
   const handleTabSelect = (
@@ -18,6 +19,9 @@ export const TabComponent: React.FunctionComponent<
     tabIndex: number | string
   ) => {
     setActiveTabKey(tabIndex as number);
+    if (onSelect) {
+      onSelect(tabIndex);
+    }
   };
 
   return (
