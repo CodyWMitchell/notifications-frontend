@@ -15,6 +15,8 @@ import {
   EmptyStateIcon,
 } from '@patternfly/react-core';
 import CubesIcon from '@patternfly/react-icons/dist/dynamic/icons/cube-icon';
+import { UserIntegration } from '../../../../types/Integration';
+import { getEntpoint } from '../../../../api/helpers/integrations/endpoints-helper';
 
 export interface TableRow {
   id: string;
@@ -55,6 +57,8 @@ const SelectableTable = (props) => {
   const { input } = useFieldApi<Record<string, unknown>>(props);
   let value: readonly EventType[] = [];
   const productFamily = getState().values[props.bundleFieldName];
+  const integrationId = getState().values['id'];
+
   useEffect(() => {
     const getAllBundles = async () => {
       const bundles: Facet[] = await getBundleFacets({
@@ -73,6 +77,42 @@ const SelectableTable = (props) => {
     ) as readonly EventType[];
   }
 
+  const [activeIntegration, setActiveIntegration] = React.useState<
+    | (UserIntegration & {
+        eventTypes?: EventType[];
+      })
+    | null
+    | undefined
+  >(undefined);
+
+  console.log(event, activeIntegration, 'this is ev');
+
+  React.useEffect(() => {
+    if (integrationId) {
+      console.log('this is integrationId', integrationId);
+      const getEventData = async () => {
+        const data = await getEntpoint(integrationId);
+        if (data.event_types_group_by_bundles_and_applications) {
+          const eventTypes = data.event_types_group_by_bundles_and_applications
+            .flatMap(({ applications, ...bundle }) =>
+              applications.map(({ event_types, ...application }) =>
+                event_types.map((event) => ({ ...event, application, bundle }))
+              )
+            )
+            .flat();
+          setActiveIntegration({
+            ...data,
+            eventTypes,
+          });
+        } else {
+          setActiveIntegration(null);
+        }
+      };
+
+      getEventData();
+    }
+  }, [integrationId]);
+
   return currBundle ? (
     <AssociateEventTypesStep
       applications={currBundle.children as readonly Facet[]}
@@ -85,6 +125,7 @@ const SelectableTable = (props) => {
           },
         });
       }}
+      // initialEventTypes={activeIntegration?.eventTypes}
       values={{ events: value }}
     />
   ) : (
