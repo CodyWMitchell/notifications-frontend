@@ -77,15 +77,26 @@ const SelectableTable = (props) => {
     ) as readonly EventType[];
   }
 
-  const [activeIntegration, setActiveIntegration] = React.useState<
-    | (UserIntegration & {
-        eventTypes?: EventType[];
-      })
-    | null
-    | undefined
-  >(undefined);
-
-  console.log(event, activeIntegration, 'this is ev');
+  const mapEventTypesToInput = (events: any) => {
+    let newInput = {
+      'OpenShift': {},
+      'Red Hat Enterprise Linux': {},
+      'Console': {},
+    };
+    events.forEach((event) => {
+      newInput[event.bundle.display_name] = {
+        ...newInput[event.bundle.display_name],
+        [event.id]: {
+          eventTypeDisplayName: event.display_name,
+          applicationDisplayName: event.application.display_name,
+          description: event.description,
+          id: event.id,
+          isSelected: true,
+        },
+      };
+    });
+    return newInput;
+  }
 
   React.useEffect(() => {
     if (integrationId) {
@@ -100,12 +111,7 @@ const SelectableTable = (props) => {
               )
             )
             .flat();
-          setActiveIntegration({
-            ...data,
-            eventTypes,
-          });
-        } else {
-          setActiveIntegration(null);
+          input.onChange(mapEventTypesToInput(eventTypes));
         }
       };
 
